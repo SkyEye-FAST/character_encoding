@@ -29,14 +29,42 @@ FONT_PATH = os.path.join(P, "fonts")
 image = Image.new("RGB", (1920, 1080), (249, 242, 224))
 draw = ImageDraw.Draw(image)
 
+# 分割线
+draw.line([(735, 110), (735, 950)], fill="black", width=10)
+
 # 添加标题
 title = "字符编码查询"
+title_position = (120, 165)
 title_font = ImageFont.truetype(
-    os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 95
+    os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 85
 )
-draw.text((100, 150), title, font=title_font, fill="black")
+a, b, c, d = title_font.getbbox(title)
+title_box_position = [
+    a + title_position[0] - 50,
+    b + title_position[1] - 50,
+    c + title_position[0] + 50,
+    d + title_position[1] + 50,
+]
+draw.rounded_rectangle(
+    title_box_position,
+    fill="#2bae85",
+    radius=25,
+    corners=(True, True, False, False),
+)
+draw.rounded_rectangle(
+    [
+        title_box_position[0],
+        title_box_position[1] + d + 70,
+        title_box_position[2],
+        title_box_position[3] + 600,
+    ],
+    fill="#b9dec9",
+    radius=25,
+    corners=(False, False, True, True),
+)
+draw.text(title_position, title, font=title_font, fill="white")
 
-# 添加文本内容
+# 字体
 text_size = 54
 text_font = ImageFont.truetype(
     os.path.join(FONT_PATH, "SourceHanSerifSC-Regular.otf"), text_size
@@ -58,12 +86,13 @@ text_font_tc_bold_small = ImageFont.truetype(
 font = TTFont(os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"))
 unicode_map = font["cmap"].tables[0].ttFont.getBestCmap()
 if "CJK" in unicodedata.name(character):
-    text_position = (200, 300)
     if ord(character) in unicode_map.keys():
+        text_position = (205, 325)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
         )
     else:
+        text_position = (205, 375)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "BabelStoneHan.ttf"), 350
         )
@@ -71,8 +100,9 @@ else:
     character_font = ImageFont.truetype(
         os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
     )
-    text_position = (250, 250)
+    text_position = (275, 275)
 
+# 字符外框线
 a, b, c, d = character_font.getbbox(character)
 draw.rectangle(
     [
@@ -81,7 +111,7 @@ draw.rectangle(
         c + text_position[0],
         d + text_position[1],
     ],
-    outline="red",
+    outline="#2376b7",
     width=5,
 )
 draw.text(text_position, character, font=character_font, fill="black")
