@@ -96,7 +96,7 @@ changyong_num = next(
 print(f"《常用國字標準字體表》: {changyong_num}")  # 输出
 cichangyong = load_table("cichangyong_guozi.txt")  # 读取《次常用國字標準字體表》
 cichangyong_num = next(
-    (i + 1 for i, element in enumerate(cichangyong) if element == character),
+    (str(i + 1) for i, element in enumerate(cichangyong) if element == character),
     "未收录",
 )  # 查找编号
 print(f"《次常用國字標準字體表》: {cichangyong_num}\n")  # 输出
