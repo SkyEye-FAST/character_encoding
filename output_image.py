@@ -29,12 +29,9 @@ FONT_PATH = os.path.join(P, "fonts")
 image = Image.new("RGB", (1920, 1080), (249, 242, 224))
 draw = ImageDraw.Draw(image)
 
-# 分割线
-draw.line([(735, 110), (735, 950)], fill="black", width=10)
-
 # 添加标题
 title = "字符编码查询"
-title_position = (120, 165)
+title_position = (150, 165)
 title_font = ImageFont.truetype(
     os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 85
 )
@@ -87,12 +84,12 @@ font = TTFont(os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"))
 unicode_map = font["cmap"].tables[0].ttFont.getBestCmap()
 if "CJK" in unicodedata.name(character):
     if ord(character) in unicode_map.keys():
-        text_position = (205, 325)
+        text_position = (245, 325)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
         )
     else:
-        text_position = (205, 375)
+        text_position = (245, 375)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "BabelStoneHan.ttf"), 350
         )
@@ -100,7 +97,7 @@ else:
     character_font = ImageFont.truetype(
         os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
     )
-    text_position = (275, 275)
+    text_position = (315, 275)
 
 # 字符外框线
 a, b, c, d = character_font.getbbox(character)
