@@ -84,12 +84,12 @@ font = TTFont(os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"))
 unicode_map = font["cmap"].tables[0].ttFont.getBestCmap()
 if "CJK" in unicodedata.name(character):
     if ord(character) in unicode_map.keys():
-        text_position = (245, 325)
+        text_position = (230, 325)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
         )
     else:
-        text_position = (245, 375)
+        text_position = (230, 375)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "BabelStoneHan.ttf"), 350
         )
