@@ -35,12 +35,12 @@ title_position = (150, 165)
 title_font = ImageFont.truetype(
     os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 85
 )
-a, b, c, d = title_font.getbbox(title)
+title_bbox = list(title_font.getbbox(title))
 title_box_position = [
-    a + title_position[0] - 50,
-    b + title_position[1] - 50,
-    c + title_position[0] + 50,
-    d + title_position[1] + 50,
+    title_bbox[0] + title_position[0] - 50,
+    title_bbox[1] + title_position[1] - 50,
+    title_bbox[2] + title_position[0] + 50,
+    title_bbox[3] + title_position[1] + 50,
 ]
 draw.rounded_rectangle(
     title_box_position,
@@ -48,13 +48,14 @@ draw.rounded_rectangle(
     radius=25,
     corners=(True, True, False, False),
 )
+title_box_position_2 = [
+    title_box_position[0],
+    title_box_position[3],
+    title_box_position[2],
+    title_box_position[3] + 600,
+]
 draw.rounded_rectangle(
-    [
-        title_box_position[0],
-        title_box_position[1] + d + 70,
-        title_box_position[2],
-        title_box_position[3] + 600,
-    ],
+    title_box_position_2,
     fill="#b9dec9",
     radius=25,
     corners=(False, False, True, True),
@@ -84,12 +85,10 @@ font = TTFont(os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"))
 unicode_map = font["cmap"].tables[0].ttFont.getBestCmap()
 if "CJK" in unicodedata.name(character):
     if ord(character) in unicode_map.keys():
-        text_position = (230, 325)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
         )
     else:
-        text_position = (230, 375)
         character_font = ImageFont.truetype(
             os.path.join(FONT_PATH, "BabelStoneHan.ttf"), 350
         )
@@ -97,21 +96,24 @@ else:
     character_font = ImageFont.truetype(
         os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
     )
-    text_position = (315, 275)
 
+# 字符位置
+title_box_2_width = title_box_position_2[2] - title_box_position_2[0]
+title_box_2_height = title_box_position_2[3] - title_box_position_2[1]
+character_bbox = list(character_font.getbbox(character))
+character_width = character_bbox[2] - character_bbox[0]
+character_height = character_bbox[3] - character_bbox[1]
+character_box_position = [
+    title_box_position_2[0] + title_box_2_width / 2 - character_width / 2,
+    title_box_position_2[1] + title_box_2_height / 2 - character_height / 2,
+    title_box_position_2[0] + title_box_2_width / 2 + character_width / 2,
+    title_box_position_2[1] + title_box_2_height / 2 + character_height / 2,
+]
 # 字符外框线
-a, b, c, d = character_font.getbbox(character)
-draw.rectangle(
-    [
-        a + text_position[0],
-        b + text_position[1],
-        c + text_position[0],
-        d + text_position[1],
-    ],
-    outline="#2376b7",
-    width=5,
-)
-draw.text(text_position, character, font=character_font, fill="black")
+draw.rectangle(character_box_position, outline="#2376b7", width=5)
+# 字符
+character_position = (character_box_position[0], character_box_position[1] - character_bbox[1])
+draw.text(character_position, character, font=character_font, fill="black")
 
 # 查询的结果
 encoding_list_1 = "\n".join(
