@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import tomllib
+import sys
 import unicodedata
 from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
@@ -22,11 +24,29 @@ from get_encoding import (
 # 当前绝对路径
 P = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
 
+# 加载配置
+if not os.path.exists(os.path.join(P, "configuration.toml")):
+    print("\n无法找到配置文件，请将配置文件放置在与此脚本同级的目录下。")
+    sys.exit()
+with open(os.path.join(P, "configuration.toml"), "rb") as f:
+    config = tomllib.load(f)
+
+background_color = config["color"]["background"]  # 背景颜色
+title_box_color = config["color"]["title_box"]  # 标题框颜色
+title_color = config["color"]["title"]  # 标题颜色
+character_color = config["color"]["character"]  # 查询字符的颜色
+character_outline_color = config["color"]["character_outline"]  # 查询字符外框线的颜色
+encoding_text_color = config["color"]["encoding_text"]  # 编码（表格第一列）文字颜色
+result_text_color = config["color"]["result_text"]  # 查询结果（表格第二列）文字颜色
+
+file_name = config["output"]["file_name"]  # 输出文件名
+output_folder = config["output"]["folder"]  # 输出文件夹
+
 # 字体文件路径
 FONT_PATH = os.path.join(P, "fonts")
 
 # 创建空白图片
-image = Image.new("RGB", (1920, 1080), (249, 242, 224))
+image = Image.new("RGB", [1920, 1080], background_color)
 draw = ImageDraw.Draw(image)
 
 # 添加标题
@@ -44,7 +64,7 @@ title_box_position = [
 ]
 draw.rounded_rectangle(
     title_box_position,
-    fill="#2bae85",
+    fill=title_box_color[0],
     radius=25,
     corners=(True, True, False, False),
 )
@@ -56,11 +76,11 @@ title_box_position_2 = [
 ]
 draw.rounded_rectangle(
     title_box_position_2,
-    fill="#b9dec9",
+    fill=title_box_color[1],
     radius=25,
     corners=(False, False, True, True),
 )
-draw.text(title_position, title, font=title_font, fill="white")
+draw.text(title_position, title, font=title_font, fill=title_color)
 
 # 字体
 text_size = 54
@@ -110,10 +130,13 @@ character_box_position = [
     title_box_position_2[1] + title_box_2_height / 2 + character_height / 2,
 ]
 # 字符外框线
-draw.rectangle(character_box_position, outline="#2376b7", width=5)
+draw.rectangle(character_box_position, outline=character_outline_color, width=5)
 # 字符
-character_position = (character_box_position[0], character_box_position[1] - character_bbox[1])
-draw.text(character_position, character, font=character_font, fill="black")
+character_position = (
+    character_box_position[0],
+    character_box_position[1] - character_bbox[1],
+)
+draw.text(character_position, character, font=character_font, fill=character_color)
 
 # 查询的结果
 encoding_list_1 = "\n".join(
@@ -131,24 +154,24 @@ encoding_list_1 = "\n".join(
         "EUC-KR",
     ]
 )
-draw.text((800, 150), encoding_list_1, font=text_font_bold, fill="black")
+draw.text((800, 150), encoding_list_1, font=text_font_bold, fill=encoding_text_color)
 draw.text(
     (775, 150 + text_size * 6 + 20),
     "《通用规范汉字表》",
     font=text_font_bold_small,
-    fill="black",
+    fill=encoding_text_color,
 )
 draw.text(
     (775, 150 + text_size * 8 + 45),
     "《常用國字標準字體表》",
     font=text_font_tc_bold_small,
-    fill="black",
+    fill=encoding_text_color,
 )
 draw.text(
     (775, 150 + text_size * 9 + 60),
     "《次常用國字標準字體表》",
     font=text_font_tc_bold_small,
-    fill="black",
+    fill=encoding_text_color,
 )
 
 output_1 = "\n".join(
@@ -167,9 +190,15 @@ output_1 = "\n".join(
     ]
 )
 output_2 = output_gb2312_2
-draw.text((1325, 150), output_1, font=text_font, fill="black")
-draw.text((1300, 150 + text_size * 3 - 5), output_2, font=text_font_small, fill="black")
+draw.text((1325, 150), output_1, font=text_font, fill=result_text_color)
+draw.text(
+    (1300, 150 + text_size * 3 - 5),
+    output_2,
+    font=text_font_small,
+    fill=result_text_color,
+)
 
 # 保存图片
-with open(os.path.join(P, "output.png"), "wb") as f:
+os.makedirs((os.path.join(P, output_folder)), exist_ok=True)  # 创建输出文件夹（若不存在）
+with open(os.path.join(P, output_folder, file_name), "wb") as f:
     image.save(f)

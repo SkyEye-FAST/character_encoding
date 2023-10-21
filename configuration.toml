@@ -1,0 +1,21 @@
+[color]
+# 背景颜色
+background = "#f9f2e0"
+# 标题框颜色，分别是上下两部分的颜色
+title_box = ["#2bae85", "#b9dec9"]
+# 标题颜色
+title = "#fff"
+# 查询字符的颜色
+character = "#000"
+# 查询字符外框线的颜色
+character_outline = "#2376b7"
+# 编码（表格第一列）文字颜色
+encoding_text = "#000"
+# 查询结果（表格第二列）文字颜色
+result_text = "#310f1b"
+
+[output]
+# 输出文件名，需要指定后缀供识别格式
+file_name = "output.png"
+# 输出文件夹
+folder = "output"

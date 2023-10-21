@@ -2,15 +2,13 @@
 
 import os
 
-P = (
-    os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
-    + os.path.sep
-)  # 当前绝对路径
+# 当前绝对路径
+P = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
 
 
 # 读取以文本文件存储的字符表
 def load_table(file_path):
-    with open(P + "table" + os.path.sep + file_path, "r", encoding="utf-8") as file:
+    with open(os.path.join(P, "table", file_path), "r", encoding="utf-8") as file:
         return [line.strip() for line in file]
 
 
