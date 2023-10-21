@@ -14,6 +14,12 @@ encoding_text = "#000"
 # 查询结果（表格第二列）文字颜色
 result_text = "#310f1b"
 
+[input]
+# 字体文件夹
+font_folder = "fonts"
+# 编码表文件夹
+table_folder = "table"
+
 [output]
 # 输出文件名，需要指定后缀供识别格式
 file_name = "output.png"

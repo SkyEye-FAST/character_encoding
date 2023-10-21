@@ -39,11 +39,14 @@ character_outline_color = config["color"]["character_outline"]  # 查询字符�
 encoding_text_color = config["color"]["encoding_text"]  # 编码（表格第一列）文字颜色
 result_text_color = config["color"]["result_text"]  # 查询结果（表格第二列）文字颜色
 
+font_folder = config["input"]["font_folder"]  # 字体文件夹
+table_folder = config["input"]["table_folder"]  # 编码表文件夹
+
 file_name = config["output"]["file_name"]  # 输出文件名
 output_folder = config["output"]["folder"]  # 输出文件夹
 
 # 字体文件路径
-FONT_PATH = os.path.join(P, "fonts")
+FONT_PATH = os.path.join(P, font_folder)
 
 # 创建空白图片
 image = Image.new("RGB", [1920, 1080], background_color)

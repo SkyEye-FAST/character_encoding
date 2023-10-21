@@ -4,7 +4,7 @@
 
 ## 需求
 
-需要**Python >= 3.8**。
+由于使用了标准库`tomllib`，所以需要**Python >= 3.11**。
 
 需要库[FontTools](https://github.com/fonttools/fonttools)（`fonttools`），请使用下面的命令安装：
 
@@ -65,7 +65,9 @@ EUC-KR：未收录
 
 `output_image.py`用于生成含有查询结果的图片，需要引入`get_encoding.py`来获取结果。
 
-输出图片为脚本同级目录下的`output.png`。
+配置文件名为`configuration.toml`，位置与脚本同级。
+
+输出图片位置默认为脚本同级目录下的`output`文件夹中。
 
 图片使用字体为[思源宋体](https://github.com/adobe-fonts/source-han-serif)和[BableStone Han](https://www.babelstone.co.uk/Fonts/Han.html)，需要存放在脚本同级目录下的`fonts`文件夹中。
 
