@@ -13,6 +13,8 @@ character_outline = "#2376b7"
 encoding_text = "#000"
 # 查询结果（表格第二列）文字颜色
 result_text = "#310f1b"
+# 查询字符Unicode名的颜色
+unicode_name = "#2f4f4f"
 
 [input]
 # 字体文件夹

@@ -39,6 +39,7 @@ character_color = config["color"]["character"]  # 查询字符的颜色
 character_outline_color = config["color"]["character_outline"]  # 查询字符外框线的颜色
 encoding_text_color = config["color"]["encoding_text"]  # 编码（表格第一列）文字颜色
 result_text_color = config["color"]["result_text"]  # 查询结果（表格第二列）文字颜色
+unicode_name_color = config["color"]["unicode_name"]  # 查询字符Unicode名的颜色
 
 font_folder = config["input"]["font_folder"]  # 字体文件夹
 table_folder = config["input"]["table_folder"]  # 编码表文件夹
@@ -147,7 +148,7 @@ draw.text(
     unicode_name_position,
     unicodedata.name(character),
     font=text_font_tiny,
-    fill="#2F4F4F",
+    fill=unicode_name_color,
 )
 
 # 查询的结果
