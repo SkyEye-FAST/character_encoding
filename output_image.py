@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+import emoji
 import os
 import tomllib
 import sys
@@ -47,6 +48,7 @@ output_folder = config["output"]["folder"]  # 输出文件夹
 
 # 字体文件路径
 FONT_PATH = os.path.join(P, font_folder)
+load_font = lambda file, size: ImageFont.truetype(os.path.join(FONT_PATH, file), size)
 
 # 创建空白图片
 image = Image.new("RGB", [1920, 1080], background_color)
@@ -55,9 +57,7 @@ draw = ImageDraw.Draw(image)
 # 添加标题
 title = "字符编码查询"
 title_position = (150, 165)
-title_font = ImageFont.truetype(
-    os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 85
-)
+title_font = load_font("SourceHanSerifSC-Bold.otf", 85)
 title_bbox = list(title_font.getbbox(title))
 title_box_position = [
     title_bbox[0] + title_position[0] - 50,
@@ -87,38 +87,24 @@ draw.text(title_position, title, font=title_font, fill=title_color)
 
 # 字体
 text_size = 54
-text_font = ImageFont.truetype(
-    os.path.join(FONT_PATH, "SourceHanSerifSC-Regular.otf"), text_size
-)
-text_font_small = ImageFont.truetype(
-    os.path.join(FONT_PATH, "SourceHanSerifSC-Regular.otf"), text_size - 10
-)
-text_font_bold = ImageFont.truetype(
-    os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), text_size
-)
-text_font_bold_small = ImageFont.truetype(
-    os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), text_size - 10
-)
-text_font_tc_bold_small = ImageFont.truetype(
-    os.path.join(FONT_PATH, "SourceHanSerifTC-Bold.otf"), text_size - 10
-)
+text_font = load_font("SourceHanSerifSC-Regular.otf", text_size)
+text_font_small = load_font("SourceHanSerifSC-Regular.otf", text_size - 10)
+text_font_bold = load_font("SourceHanSerifSC-Bold.otf", text_size)
+text_font_bold_small = load_font("SourceHanSerifSC-Bold.otf", text_size - 10)
+text_font_tc_bold_small = load_font("SourceHanSerifTC-Bold.otf", text_size - 10)
 
 # 查询的字符
 font = TTFont(os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"))
 unicode_map = font["cmap"].tables[0].ttFont.getBestCmap()
 if "CJK" in unicodedata.name(character):
     if ord(character) in unicode_map.keys():
-        character_font = ImageFont.truetype(
-            os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
-        )
+        character_font = load_font("SourceHanSerifSC-Bold.otf", 350)
     else:
-        character_font = ImageFont.truetype(
-            os.path.join(FONT_PATH, "BabelStoneHan.ttf"), 350
-        )
+        character_font = load_font("BabelStoneHan.ttf", 350)
+elif emoji.purely_emoji(character):
+    character_font = load_font("AppleColorEmoji.ttf", 137)
 else:
-    character_font = ImageFont.truetype(
-        os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"), 350
-    )
+    character_font = load_font("SourceHanSerifSC-Bold.otf", 350)
 
 # 字符位置
 title_box_2_width = title_box_position_2[2] - title_box_position_2[0]
@@ -139,7 +125,13 @@ character_position = (
     character_box_position[0],
     character_box_position[1] - character_bbox[1],
 )
-draw.text(character_position, character, font=character_font, fill=character_color)
+draw.text(
+    character_position,
+    character,
+    font=character_font,
+    fill=character_color,
+    embedded_color=emoji.purely_emoji(character),
+)
 
 # 查询的结果
 encoding_list_1 = "\n".join(
