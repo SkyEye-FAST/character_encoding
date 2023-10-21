@@ -6,22 +6,10 @@
 
 由于使用了标准库`tomllib`，所以需要**Python >= 3.11**。
 
-需要库[emoji](https://github.com/carpedm20/emoji/)（`emoji`），请使用下面的命令安装：
+需要库[emoji](https://github.com/carpedm20/emoji/)（`emoji`）、[FontTools](https://github.com/fonttools/fonttools)（`fonttools`）和[Pillow](https://github.com/python-pillow/Pillow)（`Pillow`），请使用下面的命令安装：
 
 ``` shell
-pip install emoji -U
-```
-
-需要库[FontTools](https://github.com/fonttools/fonttools)（`fonttools`），请使用下面的命令安装：
-
-``` shell
-pip install fonttools -U
-```
-
-需要库[Pillow](https://github.com/python-pillow/Pillow)（`Pillow`），请使用下面的命令安装：
-
-``` shell
-pip install Pillow -U
+pip install emoji fonttools Pillow -U
 ```
 
 ## 支持
