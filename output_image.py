@@ -56,7 +56,7 @@ draw = ImageDraw.Draw(image)
 
 # 添加标题
 title = "字符编码查询"
-title_position = (150, 165)
+title_position = [150, 150]
 title_font = load_font("SourceHanSerifSC-Bold.otf", 85)
 title_bbox = list(title_font.getbbox(title))
 title_box_position = [
@@ -89,22 +89,31 @@ draw.text(title_position, title, font=title_font, fill=title_color)
 text_size = 54
 text_font = load_font("SourceHanSerifSC-Regular.otf", text_size)
 text_font_small = load_font("SourceHanSerifSC-Regular.otf", text_size - 10)
+text_font_tiny = load_font("SourceHanSerifSC-Regular.otf", 28)
 text_font_bold = load_font("SourceHanSerifSC-Bold.otf", text_size)
 text_font_bold_small = load_font("SourceHanSerifSC-Bold.otf", text_size - 10)
 text_font_tc_bold_small = load_font("SourceHanSerifTC-Bold.otf", text_size - 10)
 
 # 查询的字符
-font = TTFont(os.path.join(FONT_PATH, "SourceHanSerifSC-Bold.otf"))
-unicode_map = font["cmap"].tables[0].ttFont.getBestCmap()
-if "CJK" in unicodedata.name(character):
-    if ord(character) in unicode_map.keys():
-        character_font = load_font("SourceHanSerifSC-Bold.otf", 350)
-    else:
-        character_font = load_font("BabelStoneHan.ttf", 350)
-elif emoji.purely_emoji(character):
+valid = (
+    lambda t, file: ord(t)
+    in TTFont(os.path.join(FONT_PATH, file))["cmap"]
+    .tables[0]
+    .ttFont.getBestCmap()
+    .keys()
+)
+if emoji.purely_emoji(character):
     character_font = load_font("AppleColorEmoji.ttf", 137)
-else:
+elif valid(character, "SourceHanSerifSC-Bold.otf"):
     character_font = load_font("SourceHanSerifSC-Bold.otf", 350)
+elif valid(character, "TH-Tshyn-P0.ttf"):
+    character_font = load_font("TH-Tshyn-P0.ttf", 350)
+elif valid(character, "TH-Tshyn-P1.ttf"):
+    character_font = load_font("TH-Tshyn-P1.ttf", 350)
+elif valid(character, "TH-Tshyn-P2.ttf"):
+    character_font = load_font("TH-Tshyn-P2.ttf", 350)
+else:
+    character_font = load_font("TH-Tshyn-P16.ttf", 350)
 
 # 字符位置
 title_box_2_width = title_box_position_2[2] - title_box_position_2[0]
@@ -131,6 +140,14 @@ draw.text(
     font=character_font,
     fill=character_color,
     embedded_color=emoji.purely_emoji(character),
+)
+# 字符的Unicode名
+unicode_name_position = [title_box_position[0], title_box_position[3] + 625]
+draw.text(
+    unicode_name_position,
+    unicodedata.name(character),
+    font=text_font_tiny,
+    fill="#2F4F4F",
 )
 
 # 查询的结果

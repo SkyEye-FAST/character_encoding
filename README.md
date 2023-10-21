@@ -63,10 +63,12 @@ EUC-KR：未收录
 
 输出图片位置默认为脚本同级目录下的`output`文件夹中。
 
-图片使用字体为[思源宋体](https://github.com/adobe-fonts/source-han-serif)、[BableStone Han](https://www.babelstone.co.uk/Fonts/Han.html)和[Apple Color Emoji for Linux](https://github.com/samuelngs/apple-emoji-linux)，需要存放在脚本同级目录下的`fonts`文件夹中。
+图片使用字体为[思源宋体](https://github.com/adobe-fonts/source-han-serif)、[天珩全字库](http://cheonhyeong.com/Simplified/download.html)和[Apple Color Emoji for Linux](https://github.com/samuelngs/apple-emoji-linux)，需要存放在脚本同级目录下的`fonts`文件夹中。
 
 生成图片样式如图所示：
-![Sample](/sample.png)
+![Sample](/sample/sample.png)
+![Sample](/sample/sample.jpg)
+![Sample](/sample/sample.webp)
 
 ## 反馈
 
