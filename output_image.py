@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 
-import emoji
 import os
-import tomllib
 import sys
+import tomllib
 import unicodedata
+import emoji
 from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
 from get_encoding import (
