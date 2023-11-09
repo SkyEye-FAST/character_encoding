@@ -1,5 +1,7 @@
 # 字符编码查询
 
+[![Pylint](https://github.com/SkyEye-FAST/character_encoding/actions/workflows/pylint.yml/badge.svg)](https://github.com/SkyEye-FAST/character_encoding/actions/workflows/pylint.yml)
+
 此项目用于查询某个字符的编码（或编号）。
 
 ## 需求
