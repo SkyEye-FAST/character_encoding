@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+"""字符编码获取工具"""
 
 import os
 
@@ -6,17 +7,21 @@ import os
 P = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
 
 
-# 读取以文本文件存储的字符表
 def load_table(file_path):
+    """读取以文本文件存储的字符表"""
     with open(os.path.join(P, "table", file_path), "r", encoding="utf-8") as file:
         return [line.strip() for line in file]
 
 
-# 获取编码
-get = lambda char, encoding: char.encode(encoding, errors="ignore").hex()
+def get(char: str, encoding: str):
+    """获取编码"""
+    return char.encode(encoding, errors="ignore").hex()
 
-# 将16进制编码转为0xXXXX格式
-to_hex = lambda n: f"0x{n.upper()}" if n else "未收录"
+
+def to_hex(n:str):
+    """将16进制编码转为0xXXXX格式"""
+    return f"0x{n.upper()}" if n else "未收录"
+
 
 # 输入
 while True:
@@ -26,61 +31,61 @@ while True:
     print("请输入单个字符。\n")
 
 # ASCII编码
-output_ascii = get(character, "ascii").upper() or "未收录"
-print(f"\nASCII：{output_ascii}")
+OUTPUT_ASCII = get(character, "ascii").upper() or "未收录"
+print(f"\nASCII：{OUTPUT_ASCII}")
 # Unicode编码
-output_unicode = f"U+{format(ord(character), '04X')}"
-print(f"Unicode: {output_unicode}\n")
+OUTPUT_UNICODE = f"U+{format(ord(character), '04X')}"
+print(f"Unicode: {OUTPUT_UNICODE}\n")
 
 gb2312 = get(character, "gb2312")  # 获取GB2312编码
-output_gb2312 = to_hex(gb2312)
+OUTPUT_GB2312 = to_hex(gb2312)
 # GB2312分级
 if len(gb2312) == 4:
     gb2312_row = int(gb2312[:2], 16) - 160
     if 16 <= gb2312_row <= 55:
-        gb2312_level = "第一级汉字"
+        GB2312_LEVEL = "第一级汉字"
     elif 56 <= gb2312_row <= 87:
-        gb2312_level = "第二级汉字"
+        GB2312_LEVEL = "第二级汉字"
     else:
-        gb2312_level = "非汉字"
-    output_gb2312_2 = f"\n（{gb2312_row}区{int(gb2312[2:], 16) - 160}位，{gb2312_level}）"
+        GB2312_LEVEL = "非汉字"
+    OUTPUT_GB2312_2 = f"\n（{gb2312_row}区{int(gb2312[2:], 16) - 160}位，{GB2312_LEVEL}）"
 else:
-    output_gb2312_2 = ""
-print(f"GB/T 2312：{output_gb2312}{output_gb2312_2}")  # 输入GB2312编码
+    OUTPUT_GB2312_2 = ""
+print(f"GB/T 2312：{OUTPUT_GB2312}{OUTPUT_GB2312_2}")  # 输入GB2312编码
 output_gb18030 = to_hex(get(character, "gb18030"))
 print(f"GB 18030：{output_gb18030}")  # GB 18030编码
 
 tygf = load_table("tongyong_guifan.txt")  # 读取《通用规范汉字表》
 # 查找编号并分级
-tygf_num = next((i + 1 for i, element in enumerate(tygf) if element == character), 0)
-if tygf_num > 0:
-    if tygf_num <= 3500:
-        tygf_level = "（一级字）"
-    elif tygf_num <= 6500:
-        tygf_level = "（二级字）"
-    elif tygf_num <= 8105:
-        tygf_level = "（三级字）"
-    tygf_num = str(tygf_num).zfill(4)
+TYGF_NUM = next((i + 1 for i, element in enumerate(tygf) if element == character), 0)
+if TYGF_NUM > 0:
+    if TYGF_NUM <= 3500:
+        TYGF_LEVEL = "（一级字）"
+    elif TYGF_NUM <= 6500:
+        TYGF_LEVEL = "（二级字）"
+    elif TYGF_NUM <= 8105:
+        TYGF_LEVEL = "（三级字）"
+    TYGF_NUM = str(TYGF_NUM).zfill(4)
 else:
-    tygf_num = "未收录"
-    tygf_level = ""
+    TYGF_NUM = "未收录"
+    TYGF_LEVEL = ""
 # 输出
-output_tygf = tygf_num + tygf_level
+output_tygf = TYGF_NUM + TYGF_LEVEL
 print(f"《通用规范汉字表》: {output_tygf}\n")
 
-big5 = get(character, "big5")  # 大五码
+BIG5 = get(character, "big5")  # 大五码
 # 大五码分级
-if big5:
-    if 0xA440 <= int(big5, 16) <= 0xC67E:
-        big5_level = "（常用汉字）"
-    elif 0xC940 <= int(big5, 16) <= 0xF9D5:
-        big5_level = "（次常用汉字）"
+if BIG5:
+    if 0xA440 <= int(BIG5, 16) <= 0xC67E:
+        BIG5_LEVEL = "（常用汉字）"
+    elif 0xC940 <= int(BIG5, 16) <= 0xF9D5:
+        BIG5_LEVEL = "（次常用汉字）"
     else:
-        big5_level = ""
+        BIG5_LEVEL = ""
 else:
-    big5 = "未收录"
-    big5_level = ""
-output_big5 = to_hex(get(character, "big5")) + big5_level
+    BIG5 = "未收录"
+    BIG5_LEVEL = ""
+output_big5 = to_hex(get(character, "big5")) + BIG5_LEVEL
 print(f"Big5：{output_big5}")  # 输出
 changyong = load_table("changyong_guozi.txt")  # 读取《常用國字標準字體表》
 changyong_num = next(

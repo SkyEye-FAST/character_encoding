@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+"""生成字符编码信息图片工具"""
 
 import os
 import sys
@@ -9,10 +10,10 @@ from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
 from get_encoding import (
     character,
-    output_ascii,
-    output_unicode,
-    output_gb2312,
-    output_gb2312_2,
+    OUTPUT_ASCII,
+    OUTPUT_UNICODE,
+    OUTPUT_GB2312,
+    OUTPUT_GB2312_2,
     output_gb18030,
     output_tygf,
     output_big5,
@@ -49,17 +50,22 @@ output_folder = config["output"]["folder"]  # 输出文件夹
 
 # 字体文件路径
 FONT_PATH = os.path.join(P, font_folder)
-load_font = lambda file, size: ImageFont.truetype(os.path.join(FONT_PATH, file), size)
+
+
+def load_font(file: str, size: int):
+    """加载字体"""
+    return ImageFont.truetype(os.path.join(FONT_PATH, file), size)
+
 
 # 创建空白图片
 image = Image.new("RGB", [1920, 1080], background_color)
 draw = ImageDraw.Draw(image)
 
 # 添加标题
-title = "字符编码查询"
+TITLE = "字符编码查询"
 title_position = [150, 150]
 title_font = load_font("SourceHanSerifSC-Bold.otf", 85)
-title_bbox = list(title_font.getbbox(title))
+title_bbox = list(title_font.getbbox(TITLE))
 title_box_position = [
     title_bbox[0] + title_position[0] - 50,
     title_bbox[1] + title_position[1] - 50,
@@ -84,25 +90,30 @@ draw.rounded_rectangle(
     radius=25,
     corners=(False, False, True, True),
 )
-draw.text(title_position, title, font=title_font, fill=title_color)
+draw.text(title_position, TITLE, font=title_font, fill=title_color)
 
 # 字体
-text_size = 54
-text_font = load_font("SourceHanSerifSC-Regular.otf", text_size)
-text_font_small = load_font("SourceHanSerifSC-Regular.otf", text_size - 10)
+TEXT_SIZE = 54
+text_font = load_font("SourceHanSerifSC-Regular.otf", TEXT_SIZE)
+text_font_small = load_font("SourceHanSerifSC-Regular.otf", TEXT_SIZE - 10)
 text_font_tiny = load_font("SourceHanSerifSC-Regular.otf", 28)
-text_font_bold = load_font("SourceHanSerifSC-Bold.otf", text_size)
-text_font_bold_small = load_font("SourceHanSerifSC-Bold.otf", text_size - 10)
-text_font_tc_bold_small = load_font("SourceHanSerifTC-Bold.otf", text_size - 10)
+text_font_bold = load_font("SourceHanSerifSC-Bold.otf", TEXT_SIZE)
+text_font_bold_small = load_font("SourceHanSerifSC-Bold.otf", TEXT_SIZE - 10)
+text_font_tc_bold_small = load_font("SourceHanSerifTC-Bold.otf", TEXT_SIZE - 10)
+
 
 # 查询的字符
-valid = (
-    lambda t, file: ord(t)
-    in TTFont(os.path.join(FONT_PATH, file))["cmap"]
-    .tables[0]
-    .ttFont.getBestCmap()
-    .keys()
-)
+def valid(t, file):
+    """字符在字体中是否有效"""
+    return (
+        ord(t)
+        in TTFont(os.path.join(FONT_PATH, file))["cmap"]
+        .tables[0]
+        .ttFont.getBestCmap()
+        .keys()
+    )
+
+
 if emoji.purely_emoji(character):
     character_font = load_font("AppleColorEmoji.ttf", 137)
 elif valid(character, "SourceHanSerifSC-Bold.otf"):
@@ -152,7 +163,7 @@ draw.text(
 )
 
 # 查询的结果
-encoding_list_1 = "\n".join(
+ENCODING_LIST = "\n".join(
     [
         "ASCII",
         "Unicode",
@@ -167,31 +178,31 @@ encoding_list_1 = "\n".join(
         "EUC-KR",
     ]
 )
-draw.text((800, 150), encoding_list_1, font=text_font_bold, fill=encoding_text_color)
+draw.text((800, 150), ENCODING_LIST, font=text_font_bold, fill=encoding_text_color)
 draw.text(
-    (775, 150 + text_size * 6 + 20),
+    (775, 150 + TEXT_SIZE * 6 + 20),
     "《通用规范汉字表》",
     font=text_font_bold_small,
     fill=encoding_text_color,
 )
 draw.text(
-    (775, 150 + text_size * 8 + 45),
+    (775, 150 + TEXT_SIZE * 8 + 45),
     "《常用國字標準字體表》",
     font=text_font_tc_bold_small,
     fill=encoding_text_color,
 )
 draw.text(
-    (775, 150 + text_size * 9 + 60),
+    (775, 150 + TEXT_SIZE * 9 + 60),
     "《次常用國字標準字體表》",
     font=text_font_tc_bold_small,
     fill=encoding_text_color,
 )
 
-output_1 = "\n".join(
+OUTPUT_1 = "\n".join(
     [
-        output_ascii,
-        output_unicode,
-        output_gb2312,
+        OUTPUT_ASCII,
+        OUTPUT_UNICODE,
+        OUTPUT_GB2312,
         "",
         output_gb18030,
         output_tygf,
@@ -202,11 +213,10 @@ output_1 = "\n".join(
         output_euc_kr,
     ]
 )
-output_2 = output_gb2312_2
-draw.text((1325, 150), output_1, font=text_font, fill=result_text_color)
+draw.text((1325, 150), OUTPUT_1, font=text_font, fill=result_text_color)
 draw.text(
-    (1300, 150 + text_size * 3 - 5),
-    output_2,
+    (1300, 150 + TEXT_SIZE * 3 - 5),
+    OUTPUT_GB2312_2,
     font=text_font_small,
     fill=result_text_color,
 )
