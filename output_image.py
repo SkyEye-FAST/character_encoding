@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 """生成字符编码信息图片工具"""
 
-import os
 import sys
-import tomllib
+import tomllib as tl
+from pathlib import Path
 import unicodedata2 as ud
 import emoji
 from PIL import Image, ImageDraw, ImageFont
@@ -24,14 +24,14 @@ from get_encoding import (
 )
 
 # 当前绝对路径
-P = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
-
+P = Path(__file__).resolve().parent
 # 加载配置
-if not os.path.exists(os.path.join(P, "configuration.toml")):
+CONFIG_DIR = P / "configuration.toml"
+if not CONFIG_DIR.exists():
     print("\n无法找到配置文件，请将配置文件放置在与此脚本同级的目录下。")
     sys.exit()
-with open(os.path.join(P, "configuration.toml"), "rb") as f:
-    config = tomllib.load(f)
+with open(CONFIG_DIR, "rb") as f:
+    config = tl.load(f)
 
 background_color = config["color"]["background"]  # 背景颜色
 title_box_color = config["color"]["title_box"]  # 标题框颜色
@@ -49,12 +49,12 @@ file_name = config["output"]["file_name"]  # 输出文件名
 output_folder = config["output"]["folder"]  # 输出文件夹
 
 # 字体文件路径
-FONT_PATH = os.path.join(P, font_folder)
+FONT_DIR = P / font_folder
 
 
 def load_font(file: str, size: int):
     """加载字体"""
-    return ImageFont.truetype(os.path.join(FONT_PATH, file), size)
+    return ImageFont.truetype(FONT_DIR / file, size)
 
 
 # 创建空白图片
@@ -107,7 +107,7 @@ def valid(t, file):
     """字符在字体中是否有效"""
     return (
         ord(t)
-        in TTFont(os.path.join(FONT_PATH, file))["cmap"]
+        in TTFont(FONT_DIR / file)["cmap"]
         .tables[0]
         .ttFont.getBestCmap()
         .keys()
@@ -222,6 +222,7 @@ draw.text(
 )
 
 # 保存图片
-os.makedirs((os.path.join(P, output_folder)), exist_ok=True)  # 创建输出文件夹（若不存在）
-with open(os.path.join(P, output_folder, file_name), "wb") as f:
+OUTPUT_DIR = P / output_folder
+OUTPUT_DIR.mkdir(exist_ok=True)  # 创建输出文件夹（若不存在）
+with open(OUTPUT_DIR / file_name, "wb") as f:
     image.save(f)

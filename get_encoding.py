@@ -1,15 +1,15 @@
 # -*- coding: UTF-8 -*-
 """字符编码获取工具"""
 
-import os
+from pathlib import Path
 
 # 当前绝对路径
-P = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + ".")
+P = Path(__file__).resolve().parent
 
 
 def load_table(file_path):
     """读取以文本文件存储的字符表"""
-    with open(os.path.join(P, "table", file_path), "r", encoding="utf-8") as file:
+    with open(P / "table" / file_path, "r", encoding="utf-8") as file:
         return [line.strip() for line in file]
 
 
@@ -18,7 +18,7 @@ def get(char: str, encoding: str):
     return char.encode(encoding, errors="ignore").hex()
 
 
-def to_hex(n:str):
+def to_hex(n: str):
     """将16进制编码转为0xXXXX格式"""
     return f"0x{n.upper()}" if n else "未收录"
 
