@@ -4,7 +4,7 @@
 import os
 import sys
 import tomllib
-import unicodedata
+import unicodedata2 as ud
 import emoji
 from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
@@ -157,7 +157,7 @@ draw.text(
 unicode_name_position = [title_box_position[0], title_box_position[3] + 625]
 draw.text(
     unicode_name_position,
-    unicodedata.name(character),
+    ud.name(character),
     font=text_font_tiny,
     fill=unicode_name_color,
 )

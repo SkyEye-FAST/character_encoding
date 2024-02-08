@@ -8,10 +8,8 @@
 
 由于使用了标准库`tomllib`，所以需要**Python >= 3.11**。
 
-需要库[emoji](https://github.com/carpedm20/emoji/)（`emoji`）、[FontTools](https://github.com/fonttools/fonttools)（`fonttools`）和[Pillow](https://github.com/python-pillow/Pillow)（`Pillow`），请使用下面的命令安装：
-
 ``` shell
-pip install emoji fonttools Pillow -U
+pip install -r requirements.txt
 ```
 
 ## 支持
