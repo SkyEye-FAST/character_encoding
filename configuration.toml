@@ -23,6 +23,8 @@ font_folder = "fonts"
 table_folder = "table"
 
 [output]
+# 是否使用查询的字符作为文件名
+input_char_file_name = false
 # 输出文件名，需要指定后缀供识别格式
 file_name = "output.png"
 # 输出文件夹

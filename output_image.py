@@ -45,6 +45,7 @@ unicode_name_color = config["color"]["unicode_name"]  # 查询字符Unicode名�
 font_folder = config["input"]["font_folder"]  # 字体文件夹
 table_folder = config["input"]["table_folder"]  # 编码表文件夹
 
+input_char_file_name = config["output"]["input_char_file_name"]  # 查询的字符是否作为文件名
 file_name = config["output"]["file_name"]  # 输出文件名
 output_folder = config["output"]["folder"]  # 输出文件夹
 
@@ -224,5 +225,7 @@ draw.text(
 # 保存图片
 OUTPUT_DIR = P / output_folder
 OUTPUT_DIR.mkdir(exist_ok=True)  # 创建输出文件夹（若不存在）
+if input_char_file_name:
+    file_name = f"{character}.{file_name.split(".", maxsplit=1)[1]}"
 with open(OUTPUT_DIR / file_name, "wb") as f:
     image.save(f)
