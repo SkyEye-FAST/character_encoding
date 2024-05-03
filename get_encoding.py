@@ -7,18 +7,18 @@ from pathlib import Path
 P = Path(__file__).resolve().parent
 
 
-def load_table(file_path):
+def load_table(file_path: str) -> list[str]:
     """读取以文本文件存储的字符表"""
     with open(P / "table" / file_path, "r", encoding="utf-8") as file:
         return [line.strip() for line in file]
 
 
-def get(char: str, encoding: str):
+def get(char: str, encoding: str) -> str:
     """获取编码"""
     return char.encode(encoding, errors="ignore").hex()
 
 
-def to_hex(n: str):
+def to_hex(n: str) -> str:
     """将16进制编码转为0xXXXX格式"""
     return f"0x{n.upper()}" if n else "未收录"
 
@@ -48,7 +48,9 @@ if len(gb2312) == 4:
         GB2312_LEVEL = "第二级汉字"
     else:
         GB2312_LEVEL = "非汉字"
-    OUTPUT_GB2312_2 = f"\n（{gb2312_row}区{int(gb2312[2:], 16) - 160}位，{GB2312_LEVEL}）"
+    OUTPUT_GB2312_2 = (
+        f"\n（{gb2312_row}区{int(gb2312[2:], 16) - 160}位，{GB2312_LEVEL}）"
+    )
 else:
     OUTPUT_GB2312_2 = ""
 print(f"GB/T 2312：{OUTPUT_GB2312}{OUTPUT_GB2312_2}")  # 输入GB2312编码
