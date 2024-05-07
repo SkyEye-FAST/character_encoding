@@ -4,10 +4,12 @@
 import sys
 import tomllib as tl
 from pathlib import Path
+
 import unicodedata2 as ud
 import emoji
 from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
+
 from get_encoding import (
     character,
     OUTPUT_ASCII,
@@ -59,32 +61,32 @@ def load_font(file: str, size: int):
 
 
 # 创建空白图片
-image = Image.new("RGB", [1920, 1080], background_color)
+image = Image.new("RGB", (1920, 1080), background_color)
 draw = ImageDraw.Draw(image)
 
 # 添加标题
 TITLE = "字符编码查询"
-title_position = [150, 150]
+title_position = (150, 150)
 title_font = load_font("SourceHanSerifSC-Bold.otf", 85)
 title_bbox = list(title_font.getbbox(TITLE))
-title_box_position = [
+title_box_position = (
     title_bbox[0] + title_position[0] - 50,
     title_bbox[1] + title_position[1] - 50,
     title_bbox[2] + title_position[0] + 50,
     title_bbox[3] + title_position[1] + 50,
-]
+)
 draw.rounded_rectangle(
     title_box_position,
     fill=title_box_color[0],
     radius=25,
     corners=(True, True, False, False),
 )
-title_box_position_2 = [
+title_box_position_2 = (
     title_box_position[0],
     title_box_position[3],
     title_box_position[2],
     title_box_position[3] + 600,
-]
+)
 draw.rounded_rectangle(
     title_box_position_2,
     fill=title_box_color[1],
@@ -134,12 +136,12 @@ title_box_2_height = title_box_position_2[3] - title_box_position_2[1]
 character_bbox = list(character_font.getbbox(character))
 character_width = character_bbox[2] - character_bbox[0]
 character_height = character_bbox[3] - character_bbox[1]
-character_box_position = [
+character_box_position = (
     title_box_position_2[0] + title_box_2_width / 2 - character_width / 2,
     title_box_position_2[1] + title_box_2_height / 2 - character_height / 2,
     title_box_position_2[0] + title_box_2_width / 2 + character_width / 2,
     title_box_position_2[1] + title_box_2_height / 2 + character_height / 2,
-]
+)
 # 字符外框线
 draw.rectangle(character_box_position, outline=character_outline_color, width=5)
 # 字符
@@ -155,7 +157,7 @@ draw.text(
     embedded_color=emoji.purely_emoji(character),
 )
 # 字符的Unicode名
-unicode_name_position = [title_box_position[0], title_box_position[3] + 625]
+unicode_name_position = (title_box_position[0], title_box_position[3] + 625)
 draw.text(
     unicode_name_position,
     ud.name(character),
