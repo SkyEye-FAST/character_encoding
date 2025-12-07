@@ -2,14 +2,6 @@
 
 This project queries the encodings (or catalog numbers) associated with a single character.
 
-## Requirements
-
-The code relies on the standard-library module `tomllib`, therefore **Python >= 3.11** is required.
-
-```shell
-pip install -r requirements.txt
-```
-
 ## Supported Encodings
 
 The tool currently reports data for the following character sets and encodings:
@@ -24,6 +16,45 @@ The tool currently reports data for the following character sets and encodings:
 - *Chart of Standard Forms of Less-Than-Common National Characters* (次常用國字標準字體表)
 - Shift JIS
 - EUC-KR
+
+## Installation
+
+### Prerequisites
+
+- [Python 3.11+](https://www.python.org/)
+- [uv](https://github.com/astral-sh/uv)
+
+### Setup
+
+1. **Clone the repository:**
+
+    ``` bash
+    git clone https://github.com/SkyEye-FAST/character_encoding.git
+    cd mcbe-chinese-patch
+    ```
+
+2. **Create a virtual environment and install dependencies:**
+
+    ``` bash
+    uv venv
+    uv sync
+    ```
+
+    This will create a virtual environment in the `.venv` directory and install the required packages listed in `pyproject.toml`.
+
+3. **Activate the virtual environment:**
+
+    - **Windows (PowerShell):**
+
+        ``` powershell
+        .venv\Scripts\Activate.ps1
+        ```
+
+    - **macOS/Linux:**
+
+        ``` bash
+        source .venv/bin/activate
+        ```
 
 ## Usage
 
