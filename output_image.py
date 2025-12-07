@@ -1,7 +1,5 @@
 """Generate an image that summarizes encoding information for a character."""
 
-from __future__ import annotations
-
 import sys
 import tomllib as tl
 from collections.abc import Mapping
