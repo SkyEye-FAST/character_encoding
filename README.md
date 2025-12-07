@@ -69,6 +69,7 @@ When you run the script it prompts for a single character; provide exactly one g
 ```text
 ASCII：未收录
 Unicode: U+9AD1
+CJK UNIFIED IDEOGRAPH-9AD1
 
 GB/T 2312：0xF7C7
 （87区39位，第二级汉字）
