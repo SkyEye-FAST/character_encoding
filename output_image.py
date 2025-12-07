@@ -1,233 +1,297 @@
-# -*- coding: UTF-8 -*-
-"""生成字符编码信息图片工具"""
+"""Generate an image that summarizes encoding information for a character."""
+
+from __future__ import annotations
 
 import sys
 import tomllib as tl
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
-import unicodedata2 as ud
 import emoji
-from PIL import Image, ImageDraw, ImageFont
+import unicodedata2 as ud
 from fontTools.ttLib import TTFont
+from PIL import Image, ImageDraw, ImageFont
 
-from get_encoding import (
-    character,
-    OUTPUT_ASCII,
-    OUTPUT_UNICODE,
-    OUTPUT_GB2312,
-    OUTPUT_GB2312_2,
-    output_gb18030,
-    output_tygf,
-    output_big5,
-    changyong_num,
-    cichangyong_num,
-    output_shift_jis,
-    output_euc_kr,
-)
+from get_encoding import CharacterEncodingInfo, build_character_info, prompt_for_character
 
-# 当前绝对路径
-P = Path(__file__).resolve().parent
-# 加载配置
-CONFIG_DIR = P / "configuration.toml"
-if not CONFIG_DIR.exists():
-    print("\n无法找到配置文件，请将配置文件放置在与此脚本同级的目录下。")
-    sys.exit()
-with open(CONFIG_DIR, "rb") as f:
-    config = tl.load(f)
-
-background_color = config["color"]["background"]  # 背景颜色
-title_box_color = config["color"]["title_box"]  # 标题框颜色
-title_color = config["color"]["title"]  # 标题颜色
-character_color = config["color"]["character"]  # 查询字符的颜色
-character_outline_color = config["color"]["character_outline"]  # 查询字符外框线的颜色
-encoding_text_color = config["color"]["encoding_text"]  # 编码（表格第一列）文字颜色
-result_text_color = config["color"]["result_text"]  # 查询结果（表格第二列）文字颜色
-unicode_name_color = config["color"]["unicode_name"]  # 查询字符Unicode名的颜色
-
-font_folder = config["input"]["font_folder"]  # 字体文件夹
-table_folder = config["input"]["table_folder"]  # 编码表文件夹
-
-input_char_file_name = config["output"]["input_char_file_name"]  # 查询的字符是否作为文件名
-file_name = config["output"]["file_name"]  # 输出文件名
-output_folder = config["output"]["folder"]  # 输出文件夹
-
-# 字体文件路径
-FONT_DIR = P / font_folder
+PROJECT_ROOT = Path(__file__).resolve().parent
+CONFIG_PATH = PROJECT_ROOT / "configuration.toml"
 
 
-def load_font(file: str, size: int):
-    """加载字体"""
-    return ImageFont.truetype(FONT_DIR / file, size)
+def load_config(config_path: Path) -> dict[str, Any]:
+    """Load the TOML configuration file.
+
+    Args:
+        config_path: Absolute path to the configuration file.
+
+    Returns:
+        Parsed configuration dictionary.
+    """
+    with open(config_path, "rb") as file:
+        return tl.load(file)
 
 
-# 创建空白图片
-image = Image.new("RGB", (1920, 1080), background_color)
-draw = ImageDraw.Draw(image)
+def load_font(font_dir: Path, file_name: str, size: int) -> ImageFont.FreeTypeFont:
+    """Load a font file from the configured font directory.
 
-# 添加标题
-TITLE = "字符编码查询"
-title_position = (150, 150)
-title_font = load_font("SourceHanSerifSC-Bold.otf", 85)
-title_bbox = list(title_font.getbbox(TITLE))
-title_box_position = (
-    title_bbox[0] + title_position[0] - 50,
-    title_bbox[1] + title_position[1] - 50,
-    title_bbox[2] + title_position[0] + 50,
-    title_bbox[3] + title_position[1] + 50,
-)
-draw.rounded_rectangle(
-    title_box_position,
-    fill=title_box_color[0],
-    radius=25,
-    corners=(True, True, False, False),
-)
-title_box_position_2 = (
-    title_box_position[0],
-    title_box_position[3],
-    title_box_position[2],
-    title_box_position[3] + 600,
-)
-draw.rounded_rectangle(
-    title_box_position_2,
-    fill=title_box_color[1],
-    radius=25,
-    corners=(False, False, True, True),
-)
-draw.text(title_position, TITLE, font=title_font, fill=title_color)
+    Args:
+        font_dir: Directory that contains font files.
+        file_name: Target font file name.
+        size: Requested font size.
 
-# 字体
-TEXT_SIZE = 54
-text_font = load_font("SourceHanSerifSC-Regular.otf", TEXT_SIZE)
-text_font_small = load_font("SourceHanSerifSC-Regular.otf", TEXT_SIZE - 10)
-text_font_tiny = load_font("SourceHanSerifSC-Regular.otf", 28)
-text_font_bold = load_font("SourceHanSerifSC-Bold.otf", TEXT_SIZE)
-text_font_bold_small = load_font("SourceHanSerifSC-Bold.otf", TEXT_SIZE - 10)
-text_font_tc_bold_small = load_font("SourceHanSerifTC-Bold.otf", TEXT_SIZE - 10)
+    Returns:
+        Loaded TrueType/OpenType font instance.
+    """
+    return ImageFont.truetype(font_dir / file_name, size)
 
 
-# 查询的字符
-def valid(t, file):
-    """字符在字体中是否有效"""
-    return (
-        ord(t)
-        in TTFont(FONT_DIR / file)["cmap"]
-        .tables[0]
-        .ttFont.getBestCmap()
-        .keys()
+def select_character_font(character: str, font_dir: Path) -> ImageFont.FreeTypeFont:
+    """Choose a font capable of rendering the provided character.
+
+    Args:
+        character: Character that will be drawn.
+        font_dir: Directory containing available font files.
+
+    Returns:
+        A font instance sized appropriately for the canvas.
+    """
+    if emoji.purely_emoji(character):
+        return load_font(font_dir, "AppleColorEmoji.ttf", 137)
+
+    fallback_fonts = [
+        "SourceHanSerifSC-Bold.otf",
+        "TH-Tshyn-P0.ttf",
+        "TH-Tshyn-P1.ttf",
+        "TH-Tshyn-P2.ttf",
+    ]
+    for font_name in fallback_fonts:
+        font_path = font_dir / font_name
+        font = TTFont(font_path)
+        try:
+            cmap = font.getBestCmap() or {}
+            if ord(character) in cmap:
+                return load_font(font_dir, font_name, 350)
+        finally:
+            font.close()
+    return load_font(font_dir, "TH-Tshyn-P16.ttf", 350)
+
+
+def resolve_unicode_name(character: str) -> str:
+    """Return the Unicode name or a fallback label.
+
+    Args:
+        character: Character whose name should be resolved.
+
+    Returns:
+        Official Unicode character name or a fallback string.
+    """
+    try:
+        return ud.name(character)
+    except ValueError:
+        return "Unknown Unicode Name"
+
+
+def create_encoding_image(
+    info: CharacterEncodingInfo,
+    config: Mapping[str, Any],
+) -> Image.Image:
+    """Draw the encoding summary image using the provided configuration.
+
+    Args:
+        info: Aggregated encoding information for the character.
+        config: Configuration dictionary controlling fonts, colors, and layout.
+
+    Returns:
+        Rendered Pillow image object.
+    """
+    colors = config["color"]
+    font_dir = PROJECT_ROOT / config["input"]["font_folder"]
+
+    image = Image.new("RGB", (1920, 1080), colors["background"])
+    draw = ImageDraw.Draw(image)
+
+    title_text = "字符编码查询"
+    title_position = (150, 150)
+    title_font = load_font(font_dir, "SourceHanSerifSC-Bold.otf", 85)
+    title_bbox = list(title_font.getbbox(title_text))
+    title_box_position = (
+        title_bbox[0] + title_position[0] - 50,
+        title_bbox[1] + title_position[1] - 50,
+        title_bbox[2] + title_position[0] + 50,
+        title_bbox[3] + title_position[1] + 50,
     )
 
+    draw.rounded_rectangle(
+        title_box_position,
+        fill=colors["title_box"][0],
+        radius=25,
+        corners=(True, True, False, False),
+    )
+    title_box_position_2 = (
+        title_box_position[0],
+        title_box_position[3],
+        title_box_position[2],
+        title_box_position[3] + 600,
+    )
+    draw.rounded_rectangle(
+        title_box_position_2,
+        fill=colors["title_box"][1],
+        radius=25,
+        corners=(False, False, True, True),
+    )
+    draw.text(title_position, title_text, font=title_font, fill=colors["title"])
 
-if emoji.purely_emoji(character):
-    character_font = load_font("AppleColorEmoji.ttf", 137)
-elif valid(character, "SourceHanSerifSC-Bold.otf"):
-    character_font = load_font("SourceHanSerifSC-Bold.otf", 350)
-elif valid(character, "TH-Tshyn-P0.ttf"):
-    character_font = load_font("TH-Tshyn-P0.ttf", 350)
-elif valid(character, "TH-Tshyn-P1.ttf"):
-    character_font = load_font("TH-Tshyn-P1.ttf", 350)
-elif valid(character, "TH-Tshyn-P2.ttf"):
-    character_font = load_font("TH-Tshyn-P2.ttf", 350)
-else:
-    character_font = load_font("TH-Tshyn-P16.ttf", 350)
+    text_size = 54
+    text_font = load_font(font_dir, "SourceHanSerifSC-Regular.otf", text_size)
+    text_font_small = load_font(font_dir, "SourceHanSerifSC-Regular.otf", text_size - 10)
+    text_font_tiny = load_font(font_dir, "SourceHanSerifSC-Regular.otf", 28)
+    text_font_bold = load_font(font_dir, "SourceHanSerifSC-Bold.otf", text_size)
+    text_font_bold_small = load_font(font_dir, "SourceHanSerifSC-Bold.otf", text_size - 10)
+    text_font_tc_bold_small = load_font(font_dir, "SourceHanSerifTC-Bold.otf", text_size - 10)
 
-# 字符位置
-title_box_2_width = title_box_position_2[2] - title_box_position_2[0]
-title_box_2_height = title_box_position_2[3] - title_box_position_2[1]
-character_bbox = list(character_font.getbbox(character))
-character_width = character_bbox[2] - character_bbox[0]
-character_height = character_bbox[3] - character_bbox[1]
-character_box_position = (
-    title_box_position_2[0] + title_box_2_width / 2 - character_width / 2,
-    title_box_position_2[1] + title_box_2_height / 2 - character_height / 2,
-    title_box_position_2[0] + title_box_2_width / 2 + character_width / 2,
-    title_box_position_2[1] + title_box_2_height / 2 + character_height / 2,
-)
-# 字符外框线
-draw.rectangle(character_box_position, outline=character_outline_color, width=5)
-# 字符
-character_position = (
-    character_box_position[0],
-    character_box_position[1] - character_bbox[1],
-)
-draw.text(
-    character_position,
-    character,
-    font=character_font,
-    fill=character_color,
-    embedded_color=emoji.purely_emoji(character),
-)
-# 字符的Unicode名
-unicode_name_position = (title_box_position[0], title_box_position[3] + 625)
-draw.text(
-    unicode_name_position,
-    ud.name(character),
-    font=text_font_tiny,
-    fill=unicode_name_color,
-)
+    character_font = select_character_font(info.character, font_dir)
+    title_box_2_width = title_box_position_2[2] - title_box_position_2[0]
+    title_box_2_height = title_box_position_2[3] - title_box_position_2[1]
+    character_bbox = list(character_font.getbbox(info.character))
+    character_width = character_bbox[2] - character_bbox[0]
+    character_height = character_bbox[3] - character_bbox[1]
+    character_box_position = (
+        title_box_position_2[0] + title_box_2_width / 2 - character_width / 2,
+        title_box_position_2[1] + title_box_2_height / 2 - character_height / 2,
+        title_box_position_2[0] + title_box_2_width / 2 + character_width / 2,
+        title_box_position_2[1] + title_box_2_height / 2 + character_height / 2,
+    )
+    draw.rectangle(
+        character_box_position,
+        outline=colors["character_outline"],
+        width=5,
+    )
+    character_position = (
+        character_box_position[0],
+        character_box_position[1] - character_bbox[1],
+    )
+    draw.text(
+        character_position,
+        info.character,
+        font=character_font,
+        fill=colors["character"],
+        embedded_color=emoji.purely_emoji(info.character),
+    )
 
-# 查询的结果
-ENCODING_LIST = "\n".join(
-    [
-        "ASCII",
-        "Unicode",
-        "GB/T 2312",
-        "",
-        "GB 18030",
-        "",
-        "大五码",
-        "",
-        "",
-        "Shift JIS",
-        "EUC-KR",
-    ]
-)
-draw.text((800, 150), ENCODING_LIST, font=text_font_bold, fill=encoding_text_color)
-draw.text(
-    (775, 150 + TEXT_SIZE * 6 + 20),
-    "《通用规范汉字表》",
-    font=text_font_bold_small,
-    fill=encoding_text_color,
-)
-draw.text(
-    (775, 150 + TEXT_SIZE * 8 + 45),
-    "《常用國字標準字體表》",
-    font=text_font_tc_bold_small,
-    fill=encoding_text_color,
-)
-draw.text(
-    (775, 150 + TEXT_SIZE * 9 + 60),
-    "《次常用國字標準字體表》",
-    font=text_font_tc_bold_small,
-    fill=encoding_text_color,
-)
+    unicode_name_position = (title_box_position[0], title_box_position[3] + 625)
+    draw.text(
+        unicode_name_position,
+        resolve_unicode_name(info.character),
+        font=text_font_tiny,
+        fill=colors["unicode_name"],
+    )
 
-OUTPUT_1 = "\n".join(
-    [
-        OUTPUT_ASCII,
-        OUTPUT_UNICODE,
-        OUTPUT_GB2312,
-        "",
-        output_gb18030,
-        output_tygf,
-        output_big5,
-        changyong_num,
-        cichangyong_num,
-        output_shift_jis,
-        output_euc_kr,
-    ]
-)
-draw.text((1325, 150), OUTPUT_1, font=text_font, fill=result_text_color)
-draw.text(
-    (1300, 150 + TEXT_SIZE * 3 - 5),
-    OUTPUT_GB2312_2,
-    font=text_font_small,
-    fill=result_text_color,
-)
+    encoding_list = "\n".join(
+        [
+            "ASCII",
+            "Unicode",
+            "GB/T 2312",
+            "",
+            "GB 18030",
+            "",
+            "大五码",
+            "",
+            "",
+            "Shift JIS",
+            "EUC-KR",
+        ]
+    )
+    draw.text(
+        (800, 150),
+        encoding_list,
+        font=text_font_bold,
+        fill=colors["encoding_text"],
+    )
+    draw.text(
+        (775, 150 + text_size * 6 + 20),
+        "《通用规范汉字表》",
+        font=text_font_bold_small,
+        fill=colors["encoding_text"],
+    )
+    draw.text(
+        (775, 150 + text_size * 8 + 45),
+        "《常用國字標準字體表》",
+        font=text_font_tc_bold_small,
+        fill=colors["encoding_text"],
+    )
+    draw.text(
+        (775, 150 + text_size * 9 + 60),
+        "《次常用國字標準字體表》",
+        font=text_font_tc_bold_small,
+        fill=colors["encoding_text"],
+    )
 
-# 保存图片
-OUTPUT_DIR = P / output_folder
-OUTPUT_DIR.mkdir(exist_ok=True)  # 创建输出文件夹（若不存在）
-if input_char_file_name:
-    file_name = f"{character}.{file_name.split(".", maxsplit=1)[1]}"
-with open(OUTPUT_DIR / file_name, "wb") as f:
-    image.save(f)
+    big5_display = info.big5_hex if not info.big5_details else f"{info.big5_hex}{info.big5_details}"
+    result_lines = "\n".join(
+        [
+            info.ascii_hex,
+            info.unicode_label,
+            info.gb2312_hex,
+            "",
+            info.gb18030_hex,
+            info.lcuscc_result,
+            big5_display,
+            info.csfcnc_index,
+            info.csfltcnc_index,
+            info.shift_jis_hex,
+            info.euc_kr_hex,
+        ]
+    )
+    draw.text((1325, 150), result_lines, font=text_font, fill=colors["result_text"])
+    draw.text(
+        (1300, 150 + text_size * 3 - 5),
+        info.gb2312_details,
+        font=text_font_small,
+        fill=colors["result_text"],
+    )
+
+    return image
+
+
+def determine_output_path(config: Mapping[str, Any], character: str) -> Path:
+    """Compute the output path for the rendered image.
+
+    Args:
+        config: Parsed configuration dictionary.
+        character: Character that may be used for dynamic file names.
+
+    Returns:
+        Absolute path where the image should be written.
+    """
+    output_config = config["output"]
+    output_dir = PROJECT_ROOT / output_config["folder"]
+    output_dir.mkdir(exist_ok=True)
+
+    file_name = output_config["file_name"]
+    if output_config["input_char_file_name"]:
+        if "." in file_name:
+            suffix = file_name.split(".", maxsplit=1)[1]
+            file_name = f"{character}.{suffix}"
+        else:
+            file_name = f"{character}_{file_name}"
+    return output_dir / file_name
+
+
+def main() -> None:
+    """CLI entry point for generating the encoding summary image."""
+    if not CONFIG_PATH.exists():
+        print("\n无法找到配置文件，请将配置文件放置在与此脚本同级的目录下。")
+        sys.exit(1)
+
+    config = load_config(CONFIG_PATH)
+    character = prompt_for_character()
+    info = build_character_info(character)
+    image = create_encoding_image(info, config)
+    output_path = determine_output_path(config, info.character)
+    with open(output_path, "wb") as file:
+        image.save(file)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,115 +1,205 @@
-# -*- coding: UTF-8 -*-
-"""字符编码获取工具"""
+"""Utilities for gathering encoding information for a single character."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
-# 当前绝对路径
-P = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent
+DATA_DIR = PROJECT_ROOT / "data"
+UNRECORDED_LABEL = "未收录"
 
 
-def load_table(file_path: str) -> list[str]:
-    """读取以文本文件存储的字符表"""
-    with open(P / "table" / file_path, "r", encoding="utf-8") as file:
-        return [line.strip() for line in file]
+@dataclass(frozen=True)
+class CharacterEncodingInfo:
+    """Structured collection of encoding-related metadata.
+
+    Attributes:
+        character: The queried character.
+        ascii_hex: The ASCII hex representation or "未收录" if unavailable.
+        unicode_label: The Unicode code point label, e.g., "U+0041".
+        gb2312_hex: The GB/T 2312 encoding in prefixed hex format.
+        gb2312_details: Human-readable GB/T 2312 block description.
+        gb18030_hex: The GB 18030 encoding in prefixed hex format.
+        lcuscc_result: Entry number and level in the List of Commonly Used Standard Chinese
+            Characters (通用规范汉字表).
+        big5_hex: The Big5 encoding in prefixed hex format.
+        big5_details: Big5 usage level annotation, if available.
+        csfcnc_index: Entry in Chart of Standard Forms of Common National Characters
+            (常用國字標準字體表).
+        csfltcnc_index: Entry in Chart of Standard Forms of Less-Than-Common National
+            Characters (次常用國字標準字體表).
+        shift_jis_hex: The Shift JIS encoding in prefixed hex format.
+        euc_kr_hex: The EUC-KR encoding in prefixed hex format.
+    """
+
+    character: str
+    ascii_hex: str
+    unicode_label: str
+    gb2312_hex: str
+    gb2312_details: str
+    gb18030_hex: str
+    lcuscc_result: str
+    big5_hex: str
+    big5_details: str
+    csfcnc_index: str
+    csfltcnc_index: str
+    shift_jis_hex: str
+    euc_kr_hex: str
 
 
-def get(char: str, encoding: str) -> str:
-    """获取编码"""
-    return char.encode(encoding, errors="ignore").hex()
+def prompt_for_character(prompt: str = "字符：") -> str:
+    """Prompt the user until a single character is provided.
+
+    Args:
+        prompt: Input prompt shown to the user.
+
+    Returns:
+        A single-character string entered by the user.
+    """
+    while True:
+        user_input = input(prompt).strip()
+        if len(user_input) == 1:
+            return user_input
+        print("请输入单个字符。\n")
 
 
-def to_hex(n: str) -> str:
-    """将16进制编码转为0xXXXX格式"""
-    return f"0x{n.upper()}" if n else "未收录"
+@cache
+def load_table(file_name: str) -> tuple[str, ...]:
+    """Load a newline-separated character table from the data directory.
+
+    Args:
+        file_name: Name of the file relative to the data folder.
+
+    Returns:
+        Tuple containing each stripped line from the file.
+    """
+    with open(DATA_DIR / file_name, encoding="utf-8") as file:
+        return tuple(line.strip() for line in file)
 
 
-# 输入
-while True:
-    character = input("字符：")
-    if len(character) == 1:
-        break
-    print("请输入单个字符。\n")
+def build_character_info(character: str) -> CharacterEncodingInfo:
+    """Aggregate every table lookup and encoding for the provided character.
 
-# ASCII编码
-OUTPUT_ASCII = get(character, "ascii").upper() or "未收录"
-print(f"\nASCII：{OUTPUT_ASCII}")
-# Unicode编码
-OUTPUT_UNICODE = f"U+{format(ord(character), '04X')}"
-print(f"Unicode: {OUTPUT_UNICODE}\n")
+    Args:
+        character: Character to analyze.
 
-gb2312 = get(character, "gb2312")  # 获取GB2312编码
-OUTPUT_GB2312 = to_hex(gb2312)
-# GB2312分级
-if len(gb2312) == 4:
-    gb2312_row = int(gb2312[:2], 16) - 160
-    if 16 <= gb2312_row <= 55:
-        GB2312_LEVEL = "第一级汉字"
-    elif 56 <= gb2312_row <= 87:
-        GB2312_LEVEL = "第二级汉字"
+    Returns:
+        Populated :class:`CharacterEncodingInfo` instance.
+    """
+    ascii_hex_value = character.encode("ascii", errors="ignore").hex().upper()
+    ascii_hex = ascii_hex_value or UNRECORDED_LABEL
+    unicode_label = f"U+{ord(character):04X}"
+
+    gb2312_raw = character.encode("gb2312", errors="ignore").hex()
+    gb2312_hex = f"0x{gb2312_raw.upper()}" if gb2312_raw else UNRECORDED_LABEL
+    if len(gb2312_raw) == 4:
+        row = int(gb2312_raw[:2], 16) - 160
+        column = int(gb2312_raw[2:], 16) - 160
+        if 16 <= row <= 55:
+            gb2312_level = "第一级汉字"
+        elif 56 <= row <= 87:
+            gb2312_level = "第二级汉字"
+        else:
+            gb2312_level = "非汉字"
+        gb2312_details = f"\n（{row}区{column}位，{gb2312_level}）"
     else:
-        GB2312_LEVEL = "非汉字"
-    OUTPUT_GB2312_2 = (
-        f"\n（{gb2312_row}区{int(gb2312[2:], 16) - 160}位，{GB2312_LEVEL}）"
+        gb2312_details = ""
+
+    gb18030_raw = character.encode("gb18030", errors="ignore").hex()
+    gb18030_hex = f"0x{gb18030_raw.upper()}" if gb18030_raw else UNRECORDED_LABEL
+
+    big5_raw = character.encode("big5", errors="ignore").hex()
+    big5_hex = f"0x{big5_raw.upper()}" if big5_raw else UNRECORDED_LABEL
+    if big5_raw:
+        big5_code_point = int(big5_raw, 16)
+        if 0xA440 <= big5_code_point <= 0xC67E:
+            big5_details = "（常用汉字）"
+        elif 0xC940 <= big5_code_point <= 0xF9D5:
+            big5_details = "（次常用汉字）"
+        else:
+            big5_details = ""
+    else:
+        big5_details = ""
+
+    lcuscc_table = load_table("List of Commonly Used Standard Chinese Characters.txt")
+    try:
+        lcuscc_index = lcuscc_table.index(character) + 1
+    except ValueError:
+        lcuscc_result = UNRECORDED_LABEL
+    else:
+        if lcuscc_index <= 3500:
+            lcuscc_level = "（一级字）"
+        elif lcuscc_index <= 6500:
+            lcuscc_level = "（二级字）"
+        elif lcuscc_index <= 8105:
+            lcuscc_level = "（三级字）"
+        else:
+            lcuscc_level = ""
+        lcuscc_result = f"{str(lcuscc_index).zfill(4)}{lcuscc_level}"
+
+    csfcnc_table = load_table("Chart of Standard Forms of Common National Characters.txt")
+    csfcnc_index = next(
+        (str(i + 1).zfill(5) for i, entry in enumerate(csfcnc_table) if entry == character),
+        UNRECORDED_LABEL,
     )
-else:
-    OUTPUT_GB2312_2 = ""
-print(f"GB/T 2312：{OUTPUT_GB2312}{OUTPUT_GB2312_2}")  # 输入GB2312编码
-output_gb18030 = to_hex(get(character, "gb18030"))
-print(f"GB 18030：{output_gb18030}")  # GB 18030编码
 
-tygf = load_table("tongyong_guifan.txt")  # 读取《通用规范汉字表》
-# 查找编号并分级
-TYGF_NUM = next((i + 1 for i, element in enumerate(tygf) if element == character), 0)
-if TYGF_NUM > 0:
-    if TYGF_NUM <= 3500:
-        TYGF_LEVEL = "（一级字）"
-    elif TYGF_NUM <= 6500:
-        TYGF_LEVEL = "（二级字）"
-    elif TYGF_NUM <= 8105:
-        TYGF_LEVEL = "（三级字）"
-    TYGF_NUM = str(TYGF_NUM).zfill(4)
-else:
-    TYGF_NUM = "未收录"
-    TYGF_LEVEL = ""
-# 输出
-output_tygf = TYGF_NUM + TYGF_LEVEL
-print(f"《通用规范汉字表》: {output_tygf}\n")
+    csfltcnc_table = load_table(
+        "Chart of Standard Forms of Less-Than-Common National Characters.txt"
+    )
+    csfltcnc_index = next(
+        (str(i + 1) for i, entry in enumerate(csfltcnc_table) if entry == character),
+        UNRECORDED_LABEL,
+    )
 
-BIG5 = get(character, "big5")  # 大五码
-# 大五码分级
-if BIG5:
-    if 0xA440 <= int(BIG5, 16) <= 0xC67E:
-        BIG5_LEVEL = "（常用汉字）"
-    elif 0xC940 <= int(BIG5, 16) <= 0xF9D5:
-        BIG5_LEVEL = "（次常用汉字）"
-    else:
-        BIG5_LEVEL = ""
-else:
-    BIG5 = "未收录"
-    BIG5_LEVEL = ""
-output_big5 = to_hex(get(character, "big5")) + BIG5_LEVEL
-print(f"Big5：{output_big5}")  # 输出
-changyong = load_table("changyong_guozi.txt")  # 读取《常用國字標準字體表》
-changyong_num = next(
-    (
-        str(i + 1).zfill(5)
-        for i, element in enumerate(changyong)
-        if element == character
-    ),
-    "未收录",
-)  # 查找编号
-print(f"《常用國字標準字體表》: {changyong_num}")  # 输出
-cichangyong = load_table("cichangyong_guozi.txt")  # 读取《次常用國字標準字體表》
-cichangyong_num = next(
-    (str(i + 1) for i, element in enumerate(cichangyong) if element == character),
-    "未收录",
-)  # 查找编号
-print(f"《次常用國字標準字體表》: {cichangyong_num}\n")  # 输出
+    shift_jis_raw = character.encode("shift_jis", errors="ignore").hex()
+    shift_jis_hex = f"0x{shift_jis_raw.upper()}" if shift_jis_raw else UNRECORDED_LABEL
 
-# Shift JIS
-output_shift_jis = to_hex(get(character, "shift_jis"))
-print(f"Shift JIS：{output_shift_jis}\n")
+    euc_kr_raw = character.encode("euc_kr", errors="ignore").hex()
+    euc_kr_hex = f"0x{euc_kr_raw.upper()}" if euc_kr_raw else UNRECORDED_LABEL
 
-# EUC-KR
-output_euc_kr = to_hex(get(character, "euc_kr"))
-print(f"EUC-KR：{output_euc_kr}")
+    return CharacterEncodingInfo(
+        character=character,
+        ascii_hex=ascii_hex,
+        unicode_label=unicode_label,
+        gb2312_hex=gb2312_hex,
+        gb2312_details=gb2312_details,
+        gb18030_hex=gb18030_hex,
+        lcuscc_result=lcuscc_result,
+        big5_hex=big5_hex,
+        big5_details=big5_details,
+        csfcnc_index=csfcnc_index,
+        csfltcnc_index=csfltcnc_index,
+        shift_jis_hex=shift_jis_hex,
+        euc_kr_hex=euc_kr_hex,
+    )
+
+
+def display_report(info: CharacterEncodingInfo) -> None:
+    """Print a human-readable encoding summary to stdout.
+
+    Args:
+        info: Aggregated encoding information to show.
+    """
+    print(f"\nASCII：{info.ascii_hex}")
+    print(f"Unicode: {info.unicode_label}\n")
+    print(f"GB/T 2312：{info.gb2312_hex}{info.gb2312_details}")
+    print(f"GB 18030：{info.gb18030_hex}")
+    print(f"《通用规范汉字表》: {info.lcuscc_result}\n")
+    print(f"Big5：{info.big5_hex}{info.big5_details}")
+    print(f"《常用國字標準字體表》: {info.csfcnc_index}")
+    print(f"《次常用國字標準字體表》: {info.csfltcnc_index}\n")
+    print(f"Shift JIS：{info.shift_jis_hex}\n")
+    print(f"EUC-KR：{info.euc_kr_hex}")
+
+
+def main() -> None:
+    """Entry point for interactive CLI usage."""
+    character = prompt_for_character()
+    info = build_character_info(character)
+    display_report(info)
+
+
+if __name__ == "__main__":
+    main()
