@@ -1,5 +1,6 @@
 """Utilities for gathering encoding information for a single character."""
 
+import unicodedata as ud
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -17,6 +18,7 @@ class CharacterEncodingInfo:
         character: The queried character.
         ascii_hex: The ASCII hex representation or "未收录" if unavailable.
         unicode_label: The Unicode code point label, e.g., "U+0041".
+        unicode_name: Official Unicode character name or a fallback label.
         gb2312_hex: The GB/T 2312 encoding in prefixed hex format.
         gb2312_details: Human-readable GB/T 2312 block description.
         gb18030_hex: The GB 18030 encoding in prefixed hex format.
@@ -35,6 +37,7 @@ class CharacterEncodingInfo:
     character: str
     ascii_hex: str
     unicode_label: str
+    unicode_name: str
     gb2312_hex: str
     gb2312_details: str
     gb18030_hex: str
@@ -84,7 +87,7 @@ def build_character_info(character: str) -> CharacterEncodingInfo:
         character: Character to analyze.
 
     Returns:
-        Populated :class:`CharacterEncodingInfo` instance.
+        Populated `CharacterEncodingInfo` instance.
     """
     ascii_hex_value = character.encode("ascii", errors="ignore").hex().upper()
     ascii_hex = ascii_hex_value or UNRECORDED_LABEL
@@ -106,6 +109,7 @@ def build_character_info(character: str) -> CharacterEncodingInfo:
         gb2312_details = ""
 
     gb18030_raw = character.encode("gb18030", errors="ignore").hex()
+    unicode_name = ud.name(character, "未知的Unicode名称")
     gb18030_hex = f"0x{gb18030_raw.upper()}" if gb18030_raw else UNRECORDED_LABEL
 
     big5_raw = character.encode("big5", errors="ignore").hex()
@@ -158,19 +162,20 @@ def build_character_info(character: str) -> CharacterEncodingInfo:
     euc_kr_hex = f"0x{euc_kr_raw.upper()}" if euc_kr_raw else UNRECORDED_LABEL
 
     return CharacterEncodingInfo(
-        character=character,
-        ascii_hex=ascii_hex,
-        unicode_label=unicode_label,
-        gb2312_hex=gb2312_hex,
-        gb2312_details=gb2312_details,
-        gb18030_hex=gb18030_hex,
-        lcuscc_result=lcuscc_result,
-        big5_hex=big5_hex,
-        big5_details=big5_details,
-        csfcnc_index=csfcnc_index,
-        csfltcnc_index=csfltcnc_index,
-        shift_jis_hex=shift_jis_hex,
-        euc_kr_hex=euc_kr_hex,
+        character,
+        ascii_hex,
+        unicode_label,
+        unicode_name,
+        gb2312_hex,
+        gb2312_details,
+        gb18030_hex,
+        lcuscc_result,
+        big5_hex,
+        big5_details,
+        csfcnc_index,
+        csfltcnc_index,
+        shift_jis_hex,
+        euc_kr_hex,
     )
 
 
@@ -181,7 +186,8 @@ def display_report(info: CharacterEncodingInfo) -> None:
         info: Aggregated encoding information to show.
     """
     print(f"\nASCII：{info.ascii_hex}")
-    print(f"Unicode: {info.unicode_label}\n")
+    print(f"Unicode: {info.unicode_label}")
+    print(f"{info.unicode_name}\n")
     print(f"GB/T 2312：{info.gb2312_hex}{info.gb2312_details}")
     print(f"GB 18030：{info.gb18030_hex}")
     print(f"《通用规范汉字表》: {info.lcuscc_result}\n")
