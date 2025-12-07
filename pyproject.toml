@@ -1,0 +1,12 @@
+[project]
+name = "character-encoding"
+version = "0.1.0"
+description = "Query character encoding and generate a picture showing the results."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "emoji>=2.10.0",
+    "fonttools>=4.47.2",
+    "pillow>=10.3.0",
+    "unicodedata2>=15.1.0",
+]
