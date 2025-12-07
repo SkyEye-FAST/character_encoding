@@ -1,41 +1,41 @@
-# 字符编码查询
+# Character Encoding Lookup
 
-此项目用于查询某个字符的编码（或编号）。
+This project queries the encodings (or catalog numbers) associated with a single character.
 
-## 需求
+## Requirements
 
-由于使用了标准库`tomllib`，所以需要**Python >= 3.11**。
+The code relies on the standard-library module `tomllib`, therefore **Python >= 3.11** is required.
 
-``` shell
+```shell
 pip install -r requirements.txt
 ```
 
-## 支持
+## Supported Encodings
 
-目前支持的字符集和编码有：
+The tool currently reports data for the following character sets and encodings:
 
 - ASCII
 - Unicode
-- GB/T 2312《信息交换用汉字编码字符集　基本集》
-- GB 18030《信息技术　中文编码字符集》
-- 《通用规范汉字表》
-- 大五码（Big5）
-- 《常用國字標準字體表》
-- 《次常用國字標準字體表》
+- GB/T 2312 *Code of Chinese graphic character set for information interchange - Primary set* (信息交换用汉字编码字符集 基本集)
+- GB 18030 *Information technology — Chinese coded character set* (信息技术 中文编码字符集)
+- *List of Commonly Used Standard Chinese Characters* (通用规范汉字表)
+- Big5
+- *Chart of Standard Forms of Common National Characters* (常用國字標準字體表)
+- *Chart of Standard Forms of Less-Than-Common National Characters* (次常用國字標準字體表)
 - Shift JIS
 - EUC-KR
 
-## 脚本使用
+## Usage
 
-### 命令行查询
+### Command-Line Query
 
-`get_encoding.py`为基础脚本，在命令行中输出查询结果。
+`get_encoding.py` is the base script that prints the query result to the terminal.
 
-脚本运行后会提示输入单个字符，若不满足则需重新输入。
+When you run the script it prompts for a single character; provide exactly one glyph to continue.
 
-输出结果示例如下：
+**Example output:**
 
-``` text
+```text
 ASCII：未收录
 Unicode: U+9AD1
 
@@ -53,23 +53,49 @@ Shift JIS：0xE991
 EUC-KR：未收录
 ```
 
-### 生成图片
+### Image Generation
 
-`output_image.py`用于生成含有查询结果的图片，需要引入`get_encoding.py`来获取结果。
+`output_image.py` renders the query result as an image and imports `get_encoding.py` to reuse the core logic.
 
-配置文件名为`configuration.toml`，位置与脚本同级。
+Images are saved to the `output` folder located next to the scripts by default.
 
-输出图片位置默认为脚本同级目录下的`output`文件夹中。
+> [!IMPORTANT]
+> Place the configuration file `configuration.toml` beside the scripts.
+>
+> Store the font files under the `fonts` directory next to the scripts.
 
-图片使用字体为[思源宋体](https://github.com/adobe-fonts/source-han-serif)、[天珩全字库](http://cheonhyeong.com/Simplified/download.html)和[Apple Color Emoji for Linux](https://github.com/samuelngs/apple-emoji-linux)，需要存放在脚本同级目录下的`fonts`文件夹中。
+The layout uses fonts from [Source Han Serif](https://github.com/adobe-fonts/source-han-serif), [TH-Tshyn](http://cheonhyeong.com/Simplified/download.html), and [Apple Color Emoji for Linux](https://github.com/samuelngs/apple-emoji-linux).
 
-生成图片样式如图所示：
+**Example output:**
+
 ![Sample](/sample/sample.png)
 ![Sample](/sample/sample.jpg)
 ![Sample](/sample/sample.webp)
 
-## 反馈
+## License
 
-遇到的问题和功能建议等可以提出议题（Issue）。
+Source Han Serif and Apple Color Emoji for Linux are licensed under the SIL Open Font License, version 1.1.
 
-欢迎创建拉取请求（Pull request）。
+The project is released under the [Apache 2.0 license](LICENSE).
+
+``` text
+  Copyright 2023-2025 SkyEye_FAST
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+```
+
+## Feedback
+
+Please feel free to raise issues for any problems encountered or feature suggestions.
+
+Pull requests are welcome.
